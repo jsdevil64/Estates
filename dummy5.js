@@ -1,5 +1,5 @@
 // 1. உங்களோட Google Apps Script URL-ஐ கீழே உள்ள 'YOUR_SCRIPT_URL' இடத்துல பேஸ்ட் பண்ணுங்க தலை
-const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbwj4p-36M2gpV7tLcJuoAhsSQ8O-RG6dsvO99pTCqgJ76j-oxjIbC1MBHMY4cviyiTY/exec';
+const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbznwGx4KgLJHHh6gm9dCUcXbXHwtf4Qf3B5-N5OluzzE16TI-to2TMaj4s8aEWymVGF/exec';
 
 // --- ROYAL GIFT SYSTEM CONFIG (உங்களின் UPI விபரங்கள்) ---
 const MY_UPI_ID = '8939717405@ybl'; 
