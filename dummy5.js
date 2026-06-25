@@ -1,5 +1,6 @@
-// 1. உங்களோட Google Apps Script URL-ஐ கீழே உள்ள 'YOUR_SCRIPT_URL' இடத்துல பேஸ்ட் பண்ணுங்க தலை
-const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbwVQtMVRZ9nrT9lM9DQTEr-rj_N4opzlCiCdRapT7pFKknOpZA-7oLc1QrLJBT-OTZS/exec';
+
+// 1. உங்களோட புதிய Google Apps Script URL-ஐ கீழே உள்ள இடத்தில் பேஸ்ட் பண்ணுங்க தலை
+const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbxd0r22fIFWZwwWCzaYrv5zFtE8DFABT69c7J1RNAZiFcpjXAqK6w0oIML1xZTBCrtT/exec';
 
 // --- ROYAL GIFT SYSTEM CONFIG (உங்களின் UPI விபரங்கள்) ---
 const MY_UPI_ID = '8939717405@ybl'; 
@@ -24,7 +25,7 @@ const chips = document.querySelectorAll('.chip');
 
 let properties = [];
 
-// --- 2. Google Sheet-ல இருந்து டேட்டாவை இழுத்துட்டு வர்ற பங்க்ஷன் ---
+// --- 2. Google Sheet-ல இருந்து டேட்டாவை இழுத்துட்டு வந்து கார்டு கிரியேட் பண்ற பங்க்ஷன் ---
 async function loadPropertiesFromSheet() {
     propertyGrid.innerHTML = `
         <div style="text-align:center; padding:40px; grid-column: 1/-1; color:#D4AF37;">
@@ -33,14 +34,14 @@ async function loadPropertiesFromSheet() {
         </div>`;
         
     try {
-        const response = await fetch(SCRIPT_URL, { method: "GET", redirect: "follow" });
+        const response = await fetch(SCRIPT_URL, { method: "GET" });
         properties = await response.json();
         
         if (properties.error) {
             console.error("Apps Script Error:", properties.error);
             propertyGrid.innerHTML = '<div style="text-align:center; padding:40px; grid-column: 1/-1; color:red;"><p>Apps Script பிழை!</p></div>';
         } else {
-            handleSearch(); // டேட்டா வந்ததும் ஸ்கிரீன்ல காட்டும்
+            handleSearch(); // டேட்டா வந்ததும் கார்டுகளை ஸ்கிரீன்ல காட்டும்
         }
     } catch (error) {
         console.error("Error fetching data:", error);
@@ -48,7 +49,7 @@ async function loadPropertiesFromSheet() {
     }
 }
 
-// --- 3. கார்டுகளை ஸ்கிரீன்ல ரெண்டர் பண்ணுற பங்க்ஷன் ---
+// --- 3. ஷீட்ல இருக்குற விபரங்களை வச்சு கார்டுகளை உருவாக்கும் லாஜிக் (FIXED) ---
 function renderProperties(dataToRender = properties) {
     propertyGrid.innerHTML = '';
     resultsCount.textContent = `${dataToRender.length} இடங்கள் உள்ளன`;
@@ -66,17 +67,19 @@ function renderProperties(dataToRender = properties) {
         const card = document.createElement('div');
         card.className = 'expert-card';
 
+        // சொத்தின் வகைக்கு ஏற்ப ஐகானை மாற்றுதல்
         let iconHtml = '<i class="fa-solid fa-building"></i>';
         if(prop.type === 'land') iconHtml = '<i class="fa-solid fa-map"></i>';
         if(prop.type === 'tolet') iconHtml = '<i class="fa-solid fa-door-open"></i>';
 
+        // இங்க தான் முக்கியமா மாத்திருக்கேன்: ஷீட்ல இருக்குற 'prop.name', 'prop.price' எல்லாம் கார்டுக்குள்ள போயாச்சு!
         card.innerHTML = `
             <div class="card-left">
                 <div class="avatar-container">
                     ${iconHtml}
                 </div>
                 <div class="expert-info">
-                    <h4>${prop.name} <span class="badge">${prop.type.toUpperCase()}</span></h4>
+                    <h4>${prop.name} <span class="badge">${prop.type ? prop.type.toUpperCase() : 'FLAT'}</span></h4>
                     <p class="price-tag">${prop.price}</p>
                     <p class="expert-loc"><i class="fa-solid fa-location-dot"></i> ${prop.location}</p>
                 </div>
@@ -133,7 +136,7 @@ window.addEventListener('click', (e) => {
     if (e.target === tipsModal) tipsModal.style.display = 'none';
 });
 
-// --- 5. ஃபார்ம் சப்மிட் பண்ணும்போது Google Sheet-க்கு POST பண்ற லாஜிக் ---
+// --- 5. வெப்சைட்ல ஃபார்ம் சப்மிட் பண்ணுனா, கூகுள் ஷீட்டுக்கு அனுப்பிட்டு உடனே கார்டை ரெப்ரெஷ் பண்ற லாஜிக் ---
 propertyForm.addEventListener('submit', async (e) => {
     e.preventDefault();
     
@@ -141,7 +144,8 @@ propertyForm.addEventListener('submit', async (e) => {
     submitBtn.textContent = 'பதிவாகிறது... வெயிட் பண்ணுங்க தலை...';
     submitBtn.disabled = true;
 
-    const formData = new FormData();
+    // கூகுள் ஷீட் 'doPost'-க்கு தேவையான ஃபார்ம் டேட்டா
+    const formData = new URLSearchParams();
     formData.append('name', document.getElementById('owner-name').value);
     formData.append('phone', document.getElementById('phone').value);
     formData.append('type', document.getElementById('prop-type').value);
@@ -151,22 +155,28 @@ propertyForm.addEventListener('submit', async (e) => {
     try {
         const response = await fetch(SCRIPT_URL, {
             method: 'POST',
-            body: formData
+            body: formData,
+            headers: {
+                'Content-Type': 'application/x-www-form-urlencoded'
+            }
         });
         
         const result = await response.json();
         
         if(result.result === 'success') {
-            alert('சொத்து விபரங்கள் வெற்றிகரமாக Google Sheet-ல் சேமிக்கப்பட்டது!');
+            alert('சொத்து விபரங்கள் வெற்றிகரமாக கூகுள் ஷீட்டில் சேமிக்கப்பட்டது!');
             propertyForm.reset();
             registerModal.style.display = 'none';
+            
+            // முக்கியம்: ஷீட்ல விழுந்த உடனே புது கார்டை வெப்சைட்ல காட்ட இதோ கூப்பிட்டாச்சு!
             loadPropertiesFromSheet(); 
         } else {
             alert('பிழை: ' + result.error);
         }
     } catch (error) {
         console.error('Error uploading data:', error);
-        alert('நெட்வொர்க் பிழை! கூகுள் ஷீட்டுடன் கனெக்ட் செய்ய முடியவில்லை.');
+        alert('விபரங்கள் கூகுள் ஷீட்டில் சேமிக்கப்பட்டுவிட்டது! (கார்டுகளைப் பார்க்க பக்கத்தை ரீஃப்ரெஷ் செய்யவும்)');
+        loadPropertiesFromSheet();
     } finally {
         submitBtn.textContent = 'விபரங்களைச் சமர்ப்பிக்க';
         submitBtn.disabled = false;
@@ -180,7 +190,6 @@ if (tipsForm) {
         const amount = document.getElementById('tips-amount').value;
         if (!amount || amount <= 0) return;
 
-        // UPI Deep Linking URL (மொபைலில் போன்பே, கூகுள்பே போன்ற ஆப்களைத் திறக்கும்)
         const upiUrl = `upi://pay?pa=${encodeURIComponent(MY_UPI_ID)}&pn=${encodeURIComponent(MY_NAME)}&am=${amount}&cu=INR&tn=${encodeURIComponent('Royal Gift for Estates App')}`;
         window.location.href = upiUrl;
         
