@@ -93,19 +93,23 @@ function renderProperties(dataToRender = properties) {
     });
 }
 
-// --- 4. தேடல் மற்றும் ஃபில்டர் லாஜிக் ---
+// --- 4. தேடல் மற்றும் ஃபில்டர் லாஜிக் (பாதுகாப்பானது) ---
 function handleSearch() {
-    const searchText = areaSearch.value.toLowerCase().trim();
+    const searchText = areaSearch.value ? areaSearch.value.toLowerCase().trim() : "";
     const selectedType = propertyFilter.value;
 
     const filtered = properties.filter(prop => {
-        const matchesArea = prop.location ? prop.location.toLowerCase().includes(searchText) : false;
+        // prop.location அல்லது prop.name காலியாக இருந்தாலும் எர்ரர் வராமல் தடுக்க '|| ""' சேர்க்கப்பட்டுள்ளது
+        const locationText = (prop.location || "").toString().toLowerCase();
+        const matchesArea = locationText.includes(searchText);
         const matchesType = (selectedType === 'all' || prop.type === selectedType);
         return matchesArea && matchesType;
     });
 
     renderProperties(filtered);
 }
+
+
 
 // தேடல் நிகழ்வுகள் (Events)
 searchBtn.addEventListener('click', handleSearch);
