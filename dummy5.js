@@ -49,7 +49,7 @@ async function loadPropertiesFromSheet() {
     }
 }
 
-// --- 3. ஷீட்ல இருக்குற விபரங்களை வச்சு கார்டுகளை உருவாக்கும் லாஜிக் (FIXED) ---
+// --- 3. ஷீட்ல இருக்குற விபரங்களை வச்சு கார்டுகளை உருவாக்கும் லாஜிக் (Direct Index Method) ---
 function renderProperties(dataToRender = properties) {
     propertyGrid.innerHTML = '';
     resultsCount.textContent = `${dataToRender.length} இடங்கள் உள்ளன`;
@@ -67,31 +67,38 @@ function renderProperties(dataToRender = properties) {
         const card = document.createElement('div');
         card.className = 'expert-card';
 
+        // உங்க ஷீட்ல இருக்குற பெயர்களை நேரடியாகவோ அல்லது கட்டங்களின் வரிசைப்படியோ எடுக்கிறது
+        const pName     = prop.name     || prop["name"]     || Object.values(prop)[1] || "No Name";
+        const pPhone    = prop.phone    || prop["phone"]    || Object.values(prop)[2] || "";
+        const pType     = prop.type     || prop["type"]     || Object.values(prop)[3] || "flat";
+        const pPrice    = prop.price    || prop["price"]    || Object.values(prop)[4] || "No Price";
+        const pLocation = prop.location || prop["location"] || Object.values(prop)[5] || "No Location";
+
         // சொத்தின் வகைக்கு ஏற்ப ஐகானை மாற்றுதல்
         let iconHtml = '<i class="fa-solid fa-building"></i>';
-        if(prop.type === 'land') iconHtml = '<i class="fa-solid fa-map"></i>';
-        if(prop.type === 'tolet') iconHtml = '<i class="fa-solid fa-door-open"></i>';
+        if(pType.toString().toLowerCase() === 'land') iconHtml = '<i class="fa-solid fa-map"></i>';
+        if(pType.toString().toLowerCase() === 'tolet') iconHtml = '<i class="fa-solid fa-door-open"></i>';
 
-        // இங்க தான் முக்கியமா மாத்திருக்கேன்: ஷீட்ல இருக்குற 'prop.name', 'prop.price' எல்லாம் கார்டுக்குள்ள போயாச்சு!
         card.innerHTML = `
             <div class="card-left">
                 <div class="avatar-container">
                     ${iconHtml}
                 </div>
                 <div class="expert-info">
-                    <h4>${prop.name} <span class="badge">${prop.type ? prop.type.toUpperCase() : 'FLAT'}</span></h4>
-                    <p class="price-tag">${prop.price}</p>
-                    <p class="expert-loc"><i class="fa-solid fa-location-dot"></i> ${prop.location}</p>
+                    <h4>${pName} <span class="badge">${pType.toString().toUpperCase()}</span></h4>
+                    <p class="price-tag">${pPrice}</p>
+                    <p class="expert-loc"><i class="fa-solid fa-location-dot"></i> ${pLocation}</p>
                 </div>
             </div>
             <div class="card-right-actions">
-                <a href="tel:${prop.phone}" class="call-btn-link"><i class="fa-solid fa-phone"></i></a>
-                <a href="https://wa.me/91${prop.phone}" target="_blank" class="wa-btn-link"><i class="fa-brands fa-whatsapp"></i></a>
+                <a href="tel:${pPhone}" class="call-btn-link"><i class="fa-solid fa-phone"></i></a>
+                <a href="https://wa.me/91${pPhone}" target="_blank" class="wa-btn-link"><i class="fa-brands fa-whatsapp"></i></a>
             </div>
         `;
         propertyGrid.appendChild(card);
     });
 }
+
 
 // --- 4. தேடல் மற்றும் ஃபில்டர் லாஜிக் (பாதுகாப்பானது) ---
 function handleSearch() {
